@@ -57,11 +57,20 @@ On Linux, use `build.sh`.
 - lz4
 - openpyxl
 
+## Attribution & Licenses
+
+This project uses third-party libraries with their respective licenses:
+
+- **ffdec_lib** ([JPEXS Free Flash Decompiler](https://github.com/jindrapetrik/jpexs-decompiler))
+  - Used under LGPL license to parse image data from game GPAK archives
+  - Source code available at: https://github.com/jindrapetrik/jpexs-decompiler/releases
+  - A copy of the LGPL license is included in [LICENSE-LGPL.txt](./src/CatAssets/ffdec_lib_26.0.0/license.txt)
+
 ## Credits
 
 - Save parsing research based on [pzx521521/mewgenics-save-editor](https://github.com/pzx521521/mewgenics-save-editor)
 - Community reverse-engineering help from players and mod users
-- PR contributors: [0demongamer0](https://github.com/0demongamer0), [An-on-im](https://github.com/An-on-im), [byronaltice](https://github.com/byronaltice), [heartskingu](https://github.com/heartskingu), [ICaxapl](https://github.com/ICaxapl), [luisMolina95](https://github.com/luisMolina95), [TheMegax](https://github.com/TheMegax)
+- PR contributors: [0demongamer0](https://github.com/0demongamer0), [An-on-im](https://github.com/An-on-im), [byronaltice](https://github.com/byronaltice), [heartskingu](https://github.com/heartskingu), [ICaxapl](https://github.com/ICaxapl), [luisMolina95](https://github.com/luisMolina95), [TheMegax](https://github.com/TheMegax), [dasfoxx](https://github.com/dasfoxx)
 - Simulated annealing (SA) idea from [PurpleMyst](https://github.com/PurpleMyst/mewgenics_breeding_helper)
 - Original idea and reference from frankieg33
 

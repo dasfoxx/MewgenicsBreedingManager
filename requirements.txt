@@ -3,3 +3,4 @@ lz4
 openpyxl
 Pillow
 numpy
+JPype1

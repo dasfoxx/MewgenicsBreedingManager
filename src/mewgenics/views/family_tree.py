@@ -16,6 +16,7 @@ from mewgenics.utils.localization import _tr
 from mewgenics.utils.styling import _enforce_min_font_in_widget_tree, _sidebar_btn
 from mewgenics.utils.tags import _make_tag_icon, _cat_tags
 from mewgenics.utils.config import _load_app_config, _save_app_config
+from CatAssets.CatAssetsLoader import ensure_defineshape_pngdata
 
 try:
     import swf_cat_renderer
@@ -83,6 +84,10 @@ class FamilyTreeBrowserView(QWidget):
         self._alive_only: bool = True
         self._show_thumbnails: bool = _load_family_tree_show_thumbnails()
         self._thumb_worker: Optional[FamilyTreeThumbnailPreloadWorker] = None
+        
+        # Pre-load DefinedShape PNG data if thumbnails are enabled
+        if self._show_thumbnails and _SWF_RENDERER_AVAILABLE:
+            ensure_defineshape_pngdata()
 
         root = QHBoxLayout(self)
         root.setContentsMargins(12, 12, 12, 12)

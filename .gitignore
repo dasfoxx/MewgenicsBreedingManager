@@ -48,5 +48,7 @@ src/CatAssets/part_cache/*
 !src/CatAssets/part_cache/.gitkeep
 src/CatAssets/thumbnail_cache/*
 !src/CatAssets/thumbnail_cache/.gitkeep
-src/CatAssets/DefinedShapes/*.png
-!src/CatAssets/DefinedShapes/.gitkeep
+src/CatAssets/palette_cache.mtime
+src/CatAssets/palette_cache.pkl
+src/CatAssets/shape_cache.mtime
+src/CatAssets/shape_cache.pkl

@@ -11,10 +11,11 @@ import io
 from PIL import Image
 from swf_database import SWFDatabaseAccessor
 import numpy as np
+from CatAssets.CatAssetsLoader import get_defineshape_png, get_palette_png, ensure_palette_pngdata
 
 logger = logging.getLogger("mewgenics.swf")
 
-_PALETTE_PATH = Path(__file__).parent / "palette.png"
+
 # SWF database directory with precomputed sprite frame data
 _SWF_DATABASE_DIR = Path(__file__).parent / "CatAssets" / "swf_database"
 # Persistent on-disk caches. These are intentionally not deleted on shutdown.
@@ -257,13 +258,20 @@ def _render_texture_frame(texture_id: int, palette_row: int = 0) -> Optional[byt
 
 def _render_shape(character_id: int) -> Optional[bytes]:
     """
-    Load a DefinedShape PNG directly from the CatAssets/DefinedShapes folder.
+    Load a DefinedShape PNG from _DEFINESHAPE_PNGDATA (in-memory cache).
+    Falls back to disk if not in memory.
     """
     cache_key = (character_id, "shape")
     if cache_key in _LAYER_IMAGE_CACHE:
         return _LAYER_IMAGE_CACHE[cache_key]
 
-    # Load directly from DefinedShapes folder (no need to copy to part_cache)
+    # Try to load from in-memory _DEFINESHAPE_PNGDATA first
+    data = get_defineshape_png(character_id)
+    if data is not None:
+        _LAYER_IMAGE_CACHE[cache_key] = data
+        return data
+
+    # Fallback: try to load from disk DefinedShapes folder
     defined_shapes_dir = Path(__file__).parent / "CatAssets" / "DefinedShapes"
     shape_path = defined_shapes_dir / f"{character_id}.png"
     
@@ -277,7 +285,7 @@ def _render_shape(character_id: int) -> Optional[bytes]:
             _LAYER_IMAGE_CACHE[cache_key] = None
             return None
     
-    logger.info("[SWF] DefinedShape %d not found at %s", character_id, shape_path)
+    logger.debug("[SWF] DefinedShape %d not found in memory or on disk", character_id)
     _LAYER_IMAGE_CACHE[cache_key] = None
     return None
 
@@ -595,17 +603,18 @@ def _load_palette_image():
     global _PALETTE_IMAGE
     if _PALETTE_IMAGE is not None:
         return _PALETTE_IMAGE
-    if not _PALETTE_PATH.exists():
-        logger.warning("[SWF] palette.png not found at %s", _PALETTE_PATH)
-        _PALETTE_IMAGE = False
-        return None
-    try:
-        _PALETTE_IMAGE = Image.open(_PALETTE_PATH).convert("RGBA")
-        return _PALETTE_IMAGE
-    except Exception:
-        logger.exception("[SWF] Failed loading palette image")
-        _PALETTE_IMAGE = False
-        return None
+    
+    # Try to load from cached GPAK extraction first
+    ensure_palette_pngdata()
+    palette_bytes = get_palette_png()
+    if palette_bytes:
+        try:
+            _PALETTE_IMAGE = Image.open(io.BytesIO(palette_bytes)).convert("RGBA")
+            return _PALETTE_IMAGE
+        except Exception:
+            logger.exception("[SWF] Failed loading palette image from cache")
+            _PALETTE_IMAGE = False
+            return None
 
 def _palette_color(row: int, col: int) -> tuple[int, int, int] | None:
     im = _load_palette_image()

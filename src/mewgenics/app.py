@@ -10,7 +10,6 @@ from PySide6.QtGui import QColor, QPalette
 from mewgenics.utils.paths import APP_VERSION
 from mewgenics.utils.config import _saved_default_save, find_save_files
 from mewgenics.utils.game_data import _GPAK_PATH, get_gpak_path
-from mewgenics.utils.shape_extractor import ensure_defined_shapes
 from mewgenics.dialogs import SaveSelectorDialog
 from mewgenics.main_window import MainWindow, _ensure_gpak_path_interactive
 
@@ -59,7 +58,7 @@ def main():
         _ensure_gpak_path_interactive()
 
     # Extract DefinedShape PNGs from catparts.swf if the cache is empty.
-    ensure_defined_shapes(get_gpak_path())
+    #ensure_defined_shapes(get_gpak_path())
 
     # Open directly only when a valid default save exists; otherwise always show the save selector.
     default_save = _saved_default_save()
