@@ -182,6 +182,12 @@ def _apply_matrix_scale(img, m):
         img = img.resize((int(img.width*sx), int(img.height*sy)), Image.Resampling.LANCZOS)
     return img
 
+# doesn't match still. TODO rigure out actual RNG calculation later
+def get_pose(cat_id, total_poses):
+    seed = (((cat_id & 0xFFFFFFFFFFFFFFFF) * 0xFF1CD035 + 5) & 0xFFFFFFFFFFFFFFFF)
+    random_val = seed >> 32
+    return (random_val * total_poses) >> 32
+
 def get_shape_bounds(layer, db: "SWFDatabaseAccessor") -> Optional[tuple[float, float, float, float]]:
     if not layer:
         return None
@@ -1022,6 +1028,20 @@ def render_cat_thumbnail(cat, size: int = DEFAULT_TREE_THUMBNAIL_SIZE) -> Option
                             ear_canvas.alpha_composite(detail_layer, (detail_canvas_x, detail_canvas_y))
                         else:
                             headcanvas.alpha_composite(detail_layer, (detail_canvas_x, detail_canvas_y))
+
+                        # Render eyebrows for eyes
+                        if slot_name == "eye_L" or slot_name == "eye_R":
+                            eyebrow_slot = "eyebrow_L" if slot_name == "eye_L" else "eyebrow_R"
+                            eyebrow_part_id = parts.get(eyebrow_slot)
+                            if eyebrow_part_id and eyebrow_part_id < 0xFFFFFFFE:
+                                eyebrow_png = render_cat_part(eyebrow_slot, eyebrow_part_id, texture_data=cached_texture_png)
+                                if eyebrow_png:
+                                    eyebrow_layer = Image.open(io.BytesIO(eyebrow_png)).convert("RGBA")
+                                    # Position eyebrow above the eye
+                                    eyebrow_canvas_y = detail_canvas_y - (detail_layer.height - eyebrow_layer.height) // 2
+                                    eyebrow_canvas_x = detail_canvas_x + (detail_layer.width - eyebrow_layer.width) // 2
+                                    headcanvas.alpha_composite(eyebrow_layer, (int(eyebrow_canvas_x), int(eyebrow_canvas_y)))
+
         except Exception as e:
             logger.debug("[SWF] Failed to render head details: %s", e)
     

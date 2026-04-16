@@ -1385,7 +1385,8 @@ class Cat:
         self.parsed_gender = self.gender
         self.parsed_aggression = self.aggression
         self.parsed_libido = self.libido
-        self.parsed_inbredness = self.inbredness
+        self.parsed_inbredness = self.inbredness  
+
 
         # Relationship slots
         self._lover_uids = _read_db_key_candidates(raw, self.db_key, (48,), base_offset=personality_anchor)

@@ -1,0 +1,102 @@
+{
+  "2": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "10": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "12": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "13": {
+    "class_name": "FamilyTreeHud",
+    "table_name": "FamilyTreeHud",
+    "is_named": true
+  },
+  "16": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "18": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "30": {
+    "class_name": "familytree_fla.background_5",
+    "table_name": "familytree_fla.background_5",
+    "is_named": true
+  },
+  "32": {
+    "class_name": "familytree_fla.AniTail_7",
+    "table_name": "familytree_fla.AniTail_7",
+    "is_named": true
+  },
+  "34": {
+    "class_name": "familytree_fla.AniLeg_8",
+    "table_name": "familytree_fla.AniLeg_8",
+    "is_named": true
+  },
+  "36": {
+    "class_name": "familytree_fla.AniBody_9",
+    "table_name": "familytree_fla.AniBody_9",
+    "is_named": true
+  },
+  "38": {
+    "class_name": "familytree_fla.AniFace1_10",
+    "table_name": "familytree_fla.AniFace1_10",
+    "is_named": true
+  },
+  "39": {
+    "class_name": "familytree_fla.cat_6",
+    "table_name": "familytree_fla.cat_6",
+    "is_named": true
+  },
+  "41": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "43": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "49": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "51": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "57": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "59": {
+    "class_name": "",
+    "table_name": "",
+    "is_named": false
+  },
+  "63": {
+    "class_name": "FamilyTreePortrait",
+    "table_name": "FamilyTreePortrait",
+    "is_named": true
+  },
+  "66": {
+    "class_name": "FamilyTreeWallpaper",
+    "table_name": "FamilyTreeWallpaper",
+    "is_named": true
+  }
+}

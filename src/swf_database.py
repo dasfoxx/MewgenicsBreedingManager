@@ -32,14 +32,14 @@ logger = logging.getLogger("swf_db")
 
 
 class SWFDatabaseAccessor:
-    """Fast accessor for precomputed SWF frame data from unified catparts.db and catanis_database.db"""
+    """Fast accessor for precomputed SWF frame data from catparts.db, catanis_database.db, and familytree.db"""
     
-    def __init__(self, db_dir: Optional[Path] = None, db_type: Literal["catparts", "catanis"] = "catparts"):
+    def __init__(self, db_dir: Optional[Path] = None, db_type: Literal["catparts", "catanis", "familytree"] = "catparts"):
         """Initialize the SWF database accessor.
         
         Args:
             db_dir: Path to the swf_database directory. Defaults to CatAssets/swf_database
-            db_type: Which database to use: "catparts" (default) or "catanis"
+            db_type: Which database to use: "catparts" (default), "catanis", or "familytree"
         """
         if db_dir is None:
             db_dir = Path(__file__).parent / "CatAssets" / "swf_database"
@@ -47,15 +47,19 @@ class SWFDatabaseAccessor:
         self.db_dir = Path(db_dir)
         self.catparts_db_file = self.db_dir / "catparts.db"
         self.catanis_db_file = self.db_dir / "catanis_database.db"
+        self.familytree_db_file = self.db_dir / "familytree.db"
         self.shapes_db_file = self.db_dir / "shapes.db"
         
-        self._active_db_type: Literal["catparts", "catanis"] = db_type
+        self._active_db_type: Literal["catparts", "catanis", "familytree"] = db_type
         self._symbol_class_map: Optional[Dict[str, Any]] = None
         self._catanis_symbol_class_map: Optional[Dict[str, Any]] = None
+        self._familytree_symbol_class_map: Optional[Dict[str, Any]] = None
         self._sprite_metadata: Optional[Dict[int, tuple]] = None
         self._catanis_sprite_metadata: Optional[Dict[int, tuple]] = None
+        self._familytree_sprite_metadata: Optional[Dict[int, tuple]] = None
         self._db_connection: Optional[sqlite3.Connection] = None
         self._catanis_db_connection: Optional[sqlite3.Connection] = None
+        self._familytree_db_connection: Optional[sqlite3.Connection] = None
         self._shapes_db_connection: Optional[sqlite3.Connection] = None
         
         if not self.catparts_db_file.exists():
@@ -64,14 +68,17 @@ class SWFDatabaseAccessor:
         if not self.catanis_db_file.exists():
             logger.debug(f"Catanis database not found: {self.catanis_db_file}")
         
+        if not self.familytree_db_file.exists():
+            logger.debug(f"Familytree database not found: {self.familytree_db_file}")
+        
         if not self.shapes_db_file.exists():
             logger.debug(f"Shape bounds database not found: {self.shapes_db_file}")
         
         self._load_symbol_class_maps()
     
-    def set_active_database(self, db_type: Literal["catparts", "catanis"]) -> None:
-        """Switch between catparts and catanis databases."""
-        if db_type not in ("catparts", "catanis"):
+    def set_active_database(self, db_type: Literal["catparts", "catanis", "familytree"]) -> None:
+        """Switch between catparts, catanis, and familytree databases."""
+        if db_type not in ("catparts", "catanis", "familytree"):
             logger.warning(f"Unknown database type: {db_type}. Using catparts.")
             self._active_db_type = "catparts"
             return
@@ -82,12 +89,16 @@ class SWFDatabaseAccessor:
         """Get the currently active database file path"""
         if self._active_db_type == "catanis":
             return self.catanis_db_file
+        elif self._active_db_type == "familytree":
+            return self.familytree_db_file
         return self.catparts_db_file
     
     def _get_connection(self) -> Optional[sqlite3.Connection]:
         """Get or create database connection for active database"""
         if self._active_db_type == "catanis":
             return self._get_catanis_connection()
+        elif self._active_db_type == "familytree":
+            return self._get_familytree_connection()
         return self._get_catparts_connection()
     
     def _get_catparts_connection(self) -> Optional[sqlite3.Connection]:
@@ -120,6 +131,22 @@ class SWFDatabaseAccessor:
             return self._catanis_db_connection
         except Exception as e:
             logger.error(f"Failed to open catanis_database.db: {e}")
+            return None
+    
+    def _get_familytree_connection(self) -> Optional[sqlite3.Connection]:
+        """Get or create familytree database connection"""
+        if self._familytree_db_connection is not None:
+            return self._familytree_db_connection
+        
+        if not self.familytree_db_file.exists():
+            return None
+        
+        try:
+            self._familytree_db_connection = sqlite3.connect(str(self.familytree_db_file))
+            self._familytree_db_connection.row_factory = sqlite3.Row
+            return self._familytree_db_connection
+        except Exception as e:
+            logger.error(f"Failed to open familytree.db: {e}")
             return None
     
     def _get_shapes_connection(self) -> Optional[sqlite3.Connection]:
@@ -167,11 +194,27 @@ class SWFDatabaseAccessor:
         else:
             logger.debug(f"Catanis symbol class map not found: {catanis_map_file}")
             self._catanis_symbol_class_map = {}
+        
+        # Load familytree symbol map
+        familytree_map_file = self.db_dir / "familytree_symbol_class_map.json"
+        if familytree_map_file.exists():
+            try:
+                with open(familytree_map_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self._familytree_symbol_class_map = data or {}
+            except Exception as e:
+                logger.debug(f"Failed to load familytree symbol class map: {e}")
+                self._familytree_symbol_class_map = {}
+        else:
+            logger.debug(f"Familytree symbol class map not found: {familytree_map_file}")
+            self._familytree_symbol_class_map = {}
     
     def _load_sprite_metadata(self) -> None:
         """Load sprite metadata from active database's sprite_metadata table"""
         if self._active_db_type == "catanis":
             self._load_catanis_sprite_metadata()
+        elif self._active_db_type == "familytree":
+            self._load_familytree_sprite_metadata()
         else:
             self._load_catparts_sprite_metadata()
     
@@ -235,17 +278,54 @@ class SWFDatabaseAccessor:
         except Exception as e:
             logger.debug(f"Failed to load catanis sprite_metadata: {e}")
     
+    def _load_familytree_sprite_metadata(self) -> None:
+        """Load familytree sprite metadata from database sprite_metadata table"""
+        if self._familytree_sprite_metadata is not None:
+            return
+        
+        self._familytree_sprite_metadata = {}
+        
+        conn = self._get_familytree_connection()
+        if conn is None:
+            return
+        
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+            SELECT sprite_id, table_name, class_name, is_named
+            FROM sprite_metadata
+            ''')
+            
+            for row in cursor.fetchall():
+                sprite_id = row['sprite_id']
+                self._familytree_sprite_metadata[sprite_id] = (
+                    row['table_name'],
+                    row['class_name'],
+                    bool(row['is_named'])
+                )
+            
+            logger.debug(f"Loaded {len(self._familytree_sprite_metadata)} familytree sprite metadata entries")
+        except Exception as e:
+            logger.debug(f"Failed to load familytree sprite_metadata: {e}")
+    
     def _get_table_name(self, class_name_or_sprite_id: Any) -> Optional[str]:
         """Get the table name for a sprite by class name or sprite ID."""
         # Determine which symbol map to use
         symbol_map = self._symbol_class_map
         if self._active_db_type == "catanis":
             symbol_map = self._catanis_symbol_class_map or self._symbol_class_map
+        elif self._active_db_type == "familytree":
+            symbol_map = self._familytree_symbol_class_map or self._symbol_class_map
         
         # If it's an int (sprite ID), look it up
         if isinstance(class_name_or_sprite_id, int):
             self._load_sprite_metadata()
-            metadata_dict = self._catanis_sprite_metadata if self._active_db_type == "catanis" else self._sprite_metadata
+            if self._active_db_type == "catanis":
+                metadata_dict = self._catanis_sprite_metadata
+            elif self._active_db_type == "familytree":
+                metadata_dict = self._familytree_sprite_metadata
+            else:
+                metadata_dict = self._sprite_metadata
             if class_name_or_sprite_id in metadata_dict:
                 return metadata_dict[class_name_or_sprite_id][0]
             return f"sprite_{class_name_or_sprite_id}"
